@@ -2,7 +2,12 @@ import glob
 import os
 import re
 from pathlib import Path
-
+import colorama
+# from colorama import Fore, Back, Style
+# colorama.init()
+s="."
+treeString=""
+treeCounter=2
 silmessage=False
 silinenObje=Path()
 yaratmessage=False
@@ -71,6 +76,7 @@ class Dosya:
 class Klasor:
     def __init__(self,path):
         self.path=Path(path)
+        self.name=self.path.parts[-1]
         self.__dosyaListesi=self.dosyalar(initial=True) 
         self.__klasorListesi=self.klasorler(initial=True)
     def dosyalar(self,initial=None):
@@ -105,6 +111,55 @@ class Klasor:
         
         # print(path2File)
         # print(path2File.exists())
+    def klasorYarat(self,klasorName):
+        global yaratmessage
+        path2File=Path()
+        path2File=self.path / klasorName
+        path2File.mkdir()
+        yaratmessage=True
+    def klasoruSil(self):
+        try:
+            self.path.rmdir()
+        except Exception as e:
+            print(e)
+    def altKlasorSil(self,klasorName):
+        path2Klasor=Path()
+        path2Klasor=self.path / klasorName
+        p=None
+        try:
+            p=[klasor for klasor in self.__klasorListesi if path2Klasor==klasor.path][0]
+        except Exception as e:
+            print("No such folder")
+        if p!=None:
+            p.klasoruSil()
+        else:
+            print("Nothing done!")
+    def __genTree(self):
+        global treeString
+        global treeCounter
+        if self.path.parent ==Path("."):
+            treeString=treeString+color.project+self.name+color.end
+
+        if self.__dosyaListesi !=[]:
+            treeCounter=treeCounter+2
+            for dosya in self.__dosyaListesi:
+                treeString=treeString+"\n"+treeCounter*" "+"|__"+color.dosya+dosya.fileName+color.end
+            treeCounter=treeCounter-2
+
+        for altKlasor in self.__klasorListesi:
+            treeCounter=treeCounter+2
+            treeString=treeString+"\n"+treeCounter*" "+"|__"+color.directory+altKlasor.name+color.end
+            altKlasor.__genTree()
+            treeCounter=treeCounter-2
+    def tree(self):
+        self.__genTree()
+        print(treeString)
+        treeCounter=0
+    def dosyaBul(self,fileName):
+        path2File=Path()
+        path2File=self.path / fileName
+        p = [dosya for dosya in self.__dosyaListesi if path2File==dosya.pathNFileName][0]
+        return p
         
     def __str__(self):
         global silmessage
@@ -118,4 +173,9 @@ class Klasor:
         if silmessage:
             self.__init__()
             silmessage=False
-        return "Klasor Nesnesi: {}".format(self.path)
+        return "Klasor Nesnesi: {}".format(self.name)
+class color:
+    project="\033[0;0;35m"
+    directory="\033[0;0;33m"
+    dosya="\033[0;0;34m"
+    end='\033[0m'
